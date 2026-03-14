@@ -1,30 +1,34 @@
 #!/usr/bin/env node
 
-// Node.js CLI Calculator
+// Node.js CLI Calculator (uses src/calculatorLib.js)
 // Supported operations:
 // - add:       addition (a + b)
 // - subtract:  subtraction (a - b)
 // - multiply:  multiplication (a * b)
 // - divide:    division (a / b)
 
-// Usage examples:
-//   node src/calculator.js add 2 3        -> 5
-//   node src/calculator.js subtract 5 2   -> 3
-//   node src/calculator.js multiply 4 6   -> 24
-//   node src/calculator.js divide 10 2    -> 5
+const { add, subtract, multiply, divide, modulo, power, squareRoot } = require('./calculatorLib');
 
 function printHelp() {
-  console.log(`Usage: node src/calculator.js <operation> <num1> <num2>
+  console.log(`Usage:
+  node src/calculator.js <operation> <num1> <num2>
+  node src/calculator.js sqrt <num>
 
 Operations:
   add       Add num1 and num2
   subtract  Subtract num2 from num1
   multiply  Multiply num1 by num2
   divide    Divide num1 by num2
+  modulo    Remainder of num1 divided by num2
+  power     Raise base to exponent (base ^ exponent)
+  sqrt      Square root of num
 
 Examples:
   node src/calculator.js add 2 3
   node src/calculator.js divide 10 2
+  node src/calculator.js modulo 10 3
+  node src/calculator.js power 2 8
+  node src/calculator.js sqrt 9
 `);
 }
 
@@ -39,38 +43,60 @@ if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
   process.exit(0);
 }
 
-if (args.length !== 3) {
-  exitWithError('Error: Invalid number of arguments. Use --help for usage.');
-}
+const op = args[0].toLowerCase();
+let a, b;
 
-const [op, aRaw, bRaw] = args;
-const a = Number(aRaw);
-const b = Number(bRaw);
-
-if (Number.isNaN(a) || Number.isNaN(b)) {
-  exitWithError('Error: Both operands must be valid numbers.');
+if (op === 'sqrt' || op === 'squareroot') {
+  if (args.length !== 2) {
+    exitWithError('Error: sqrt requires 1 operand. Use --help for usage.');
+  }
+  a = Number(args[1]);
+  if (Number.isNaN(a)) exitWithError('Error: Operand must be a valid number.');
+} else {
+  if (args.length !== 3) {
+    exitWithError('Error: Invalid number of arguments. Use --help for usage.');
+  }
+  a = Number(args[1]);
+  b = Number(args[2]);
+  if (Number.isNaN(a) || Number.isNaN(b)) {
+    exitWithError('Error: Both operands must be valid numbers.');
+  }
 }
 
 let result;
-switch (op.toLowerCase()) {
-  case 'add':
-    result = a + b;
-    break;
-  case 'subtract':
-    result = a - b;
-    break;
-  case 'multiply':
-    result = a * b;
-    break;
-  case 'divide':
-    if (b === 0) {
-      exitWithError('Error: Division by zero is not allowed.');
-    }
-    result = a / b;
-    break;
-  default:
-    exitWithError(`Error: Unknown operation '${op}'. Use --help for supported operations.`);
+try {
+  switch (op) {
+    case 'add':
+      result = add(a, b);
+      break;
+    case 'subtract':
+      result = subtract(a, b);
+      break;
+    case 'multiply':
+      result = multiply(a, b);
+      break;
+    case 'divide':
+      result = divide(a, b);
+      break;
+    case 'modulo':
+    case 'mod':
+    case '%':
+      result = modulo(a, b);
+      break;
+    case 'power':
+    case 'pow':
+    case '**':
+      result = power(a, b);
+      break;
+    case 'sqrt':
+    case 'squareroot':
+      result = squareRoot(a);
+      break;
+    default:
+      exitWithError(`Error: Unknown operation '${op}'. Use --help for supported operations.`);
+  }
+} catch (e) {
+  exitWithError('Error: ' + e.message);
 }
 
-// Print result to stdout
 console.log(result);
